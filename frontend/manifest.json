@@ -1,0 +1,17 @@
+{
+  "name": "Industry Operations Suite",
+  "short_name": "Industry ERP",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#4f46e5",
+  "description": "App for managing events, crew, and inventory.",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1006/1006509.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "vscjava.vscode-java-pack",
+    "vmware.vscode-boot-dev-pack",
+    "mtxr.sqltools",
+    "mtxr.sqltools-driver-mysql",
+    "esbenp.prettier-vscode",
+    "editorconfig.editorconfig",
+    "ritwickdey.liveserver"
+  ]
+}

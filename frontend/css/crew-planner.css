@@ -1,0 +1,228 @@
+:root {
+  --sidebar-width: 280px;
+  --toolbar-height: 60px;
+  --footer-height: 90px;
+  --gantt-header-height: 50px;
+}
+
+#view-crew-management {
+  height: calc(100vh - 120px);
+}
+
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--border-radius);
+}
+
+/* Sidebar */
+.sidebar {
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--line-soft);
+  display: flex;
+  flex-direction: column;
+  padding: 0 1rem;
+}
+
+.sidebar-header {
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.sidebar-search {
+  padding: 1rem 0;
+}
+
+.sidebar-search .form-control {
+  background-color: var(--bg-panel);
+  border-color: var(--line);
+  color: var(--text-main);
+}
+
+.crew-nav {
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.crew-category {
+  margin-bottom: 1.5rem;
+}
+
+.crew-category h6 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.crew-list {
+  list-style: none;
+  padding-left: 0;
+  margin-left: 1.25rem;
+}
+
+.crew-list li {
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.25rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s ease;
+}
+
+.crew-list li:hover {
+  background-color: var(--bg-panel);
+}
+
+/* Main Content */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0 1.5rem;
+}
+
+.main-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  height: var(--toolbar-height);
+  border-bottom: 1px solid var(--line-soft);
+  padding: 0.5rem 0;
+}
+
+.main-toolbar .btn {
+  background-color: var(--bg-panel);
+  border-color: var(--line);
+  color: var(--text-main);
+}
+.main-toolbar .btn.active, .main-toolbar .btn:hover {
+    background-color: var(--accent);
+    color: var(--accent-fg);
+    border-color: var(--accent);
+}
+
+/* Gantt Chart */
+.gantt-container {
+  flex-grow: 1;
+  overflow: hidden;
+  /* We need to use a class selector to override the inline styles added by the library */
+  display: flex;
+}
+
+#gantt {
+  width: 100%;
+}
+
+/* Frappe Gantt Overrides for Dark Theme */
+.gantt .grid-background {
+  fill: none;
+}
+
+.gantt .grid-header {
+  fill: var(--bg-panel);
+  stroke: var(--line-soft);
+}
+.gantt .grid-row {
+    fill: var(--bg-main);
+}
+.gantt .grid-row:nth-child(odd) {
+    fill: var(--bg-panel);
+}
+
+.gantt .grid-header, .gantt .grid-row {
+    stroke: var(--line-soft);
+}
+
+.gantt .tick {
+  stroke: var(--line-soft);
+}
+
+.gantt .today-highlight {
+  fill: var(--accent);
+  opacity: 0.1;
+}
+
+.gantt .axis-line {
+  stroke: var(--line-soft);
+}
+
+.gantt .lower-text,
+.gantt .upper-text {
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  fill: var(--text-dim);
+}
+.gantt .task-name {
+    fill: var(--text-main);
+}
+
+.gantt .bar-wrapper.selected .bar {
+    stroke: var(--accent);
+    stroke-width: 2;
+}
+.gantt .bar-progress {
+  fill: var(--accent);
+}
+
+.gantt .bar-label {
+  font-size: 12px;
+  fill: var(--accent-fg);
+  font-weight: 500;
+}
+.gantt .bar {
+    fill: #3b82f6; /* Default blue from image */
+    stroke: #3b82f6;
+    rx: var(--border-radius);
+    ry: var(--border-radius);
+}
+.gantt .bar-progress {
+    fill: #1d4ed8; /* Darker blue for progress */
+}
+.gantt .handle {
+    fill: #fff;
+    stroke: #888;
+    stroke-width: .5;
+}
+
+
+/* Footer */
+.selected-crew-footer {
+  flex-shrink: 0;
+  height: var(--footer-height);
+  border-top: 1px solid var(--line-soft);
+  padding: 1rem;
+  background-color: var(--bg-sidebar);
+}
+
+.selected-crew-footer h6 {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+.selected-crew-list {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.selected-crew-member {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--bg-panel);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--line-soft);
+}

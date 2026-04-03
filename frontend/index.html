@@ -1,0 +1,949 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Industry Operations Command</title>
+
+    <!-- PWA & Mobile App Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#111827">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="IO Command">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛠️</text></svg>">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./css/styles.css" />
+    <link rel="stylesheet" href="./css/calendar.css" />
+    <link rel="stylesheet" href="./css/modals.css" />
+    <style>
+      /* --- GLOBAL SCROLL & SCALE LOCK --- */
+      body, html {
+        margin: 0; padding: 0;
+        height: 100vh; overflow: hidden;
+      }
+      .app-layout {
+        height: 100vh; overflow: hidden;
+      }
+      .workspace {
+        height: 100vh; display: flex; flex-direction: column;
+      }
+      .view-stack {
+        flex: 1; overflow-y: auto; overflow-x: hidden;
+      }
+      .table-shell {
+        overflow-y: auto;
+      }
+
+      /* --- GLOBAL TYPOGRAPHY & SPACING (ERP DENSITY) --- */
+      html, body { font-size: 14px; } /* Μικραίνει αναλογικά όλες τις γραμματοσειρές και τα κενά */
+      .brand-title { font-size: 1.15rem !important; }
+      .view-title { font-size: 1.4rem !important; font-weight: 700; letter-spacing: -0.5px; }
+      .panel-title { font-size: 0.85rem !important; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); }
+      .view-kicker { font-size: 0.65rem !important; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); font-weight: 700; }
+
+      .btn, .form-control, .form-select { font-size: 0.85rem; }
+      .badge { font-size: 0.65rem; font-weight: 700; padding: 0.4em 0.65em; }
+
+      /* Σταθερά, πανέμορφα κενά σε όλα τα "κουτιά" της εφαρμογής */
+      .panel-card {
+        padding: 1.25rem !important;
+        border-radius: 12px;
+      }
+      .panel-head { margin-bottom: 1rem !important; }
+
+      .app-layout {
+        height: 100vh; overflow: hidden;
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        transition: grid-template-columns 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .side-nav {
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        white-space: nowrap; /* Αποτρέπει το σπάσιμο του κειμένου σε 2 γραμμές στο κλείσιμο */
+      }
+      .app-layout.sidebar-collapsed {
+        grid-template-columns: 80px 1fr !important;
+      }
+      .brand-text, .nav-groups, .side-footer {
+        transition: opacity 0.2s ease, visibility 0.2s ease;
+        opacity: 1; visibility: visible;
+      }
+      .app-layout.sidebar-collapsed .brand-text,
+      .app-layout.sidebar-collapsed .nav-groups,
+      .app-layout.sidebar-collapsed .side-footer {
+        opacity: 0 !important;
+        visibility: hidden !important;
+        transition: opacity 0.1s ease, visibility 0.1s ease;
+      }
+      .brand-block {
+        display: flex; align-items: center; justify-content: space-between; padding: 1.25rem;
+      }
+      .app-layout.sidebar-collapsed .brand-block {
+        flex-direction: column; justify-content: center; padding: 1.25rem 0; gap: 1.25rem;
+      }
+      .brand-text { white-space: nowrap; }
+
+      /* --- MODERN UI ANIMATIONS --- */
+
+      /* 1. Smooth View Transitions */
+      .view-pane {
+        height: 100%;
+      }
+      .view-pane.active {
+        animation: fadeSlideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      }
+      @keyframes fadeSlideUp {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* 2. Interactive Table Rows */
+      .table-hover tbody tr {
+        transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .table-hover tbody tr:hover {
+        transform: scale(1.005) translateX(4px);
+        box-shadow: -4px 0 0 #3b82f6; /* Modern left-border highlight */
+        z-index: 10;
+        position: relative;
+      }
+
+      /* 3. Bouncy Buttons */
+      .btn {
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+      .btn:active {
+        transform: scale(0.93);
+      }
+
+      /* 4. Elegant Toast Alert */
+      #global-alert:not(.d-none) {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 320px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        border-radius: 8px;
+        animation: slideInToast 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      }
+      @keyframes slideInToast {
+        from { transform: translateX(120%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+
+      /* 5. Sidebar Nav Hover */
+      .nav-btn {
+        transition: all 0.25s ease;
+      }
+      .nav-btn:hover {
+        padding-left: 1.5rem !important;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      /* --- FULLCALENDAR OVERRIDES FOR DARK MODE --- */
+      .fc-theme-standard .fc-button-primary {
+        background-color: var(--surface-2);
+        border-color: var(--line);
+        color: var(--text-main);
+      }
+      .fc-theme-standard .fc-button-primary:not(:disabled):active,
+      .fc-theme-standard .fc-button-primary:not(:disabled).fc-button-active {
+        background-color: var(--primary);
+        border-color: var(--primary);
+      }
+      .fc .fc-toolbar-title { font-size: 1.25rem; font-weight: 600; color: var(--text-main); }
+      .fc .fc-scrollgrid { border-color: var(--line); }
+
+      /* --- SIDEBAR SCALING & EDIT ICONS --- */
+      .nav-btn { padding: 0.35rem 0.75rem; font-size: 0.85rem; margin-bottom: 2px !important; }
+      .nav-btn i { font-size: 1rem; }
+      .nav-section-title { font-size: 0.7rem; margin-bottom: 0.4rem !important; }
+      .sidebar-sub-link { padding: 0.2rem 0.5rem 0.2rem 2.2rem; font-size: 0.8rem; }
+
+      .sidebar-sub-list { max-height: 18vh; overflow-y: auto; overflow-x: hidden; }
+      .sidebar-sub-list::-webkit-scrollbar { width: 4px; }
+      .sidebar-sub-list::-webkit-scrollbar-thumb { background-color: var(--line); border-radius: 4px; }
+
+      .nav-add-btn {
+        display: none; color: var(--text-dim) !important;
+      }
+      .nav-item-wrapper:hover .nav-add-btn { display: block; }
+      .nav-add-btn:hover { color: #fff !important; }
+
+      .sidebar-sub-item { position: relative; }
+      .edit-cat-btn {
+        display: none; position: absolute; right: 8px; color: var(--text-dim) !important; z-index: 5;
+      }
+      .sidebar-sub-item:hover .edit-cat-btn { display: block; }
+      .edit-cat-btn:hover { color: #fff; }
+
+      /* --- MOBILE APP UI (KOUTIA / NATIVE APP FEEL) --- */
+      .mobile-bottom-nav { display: none; }
+
+      @media (max-width: 768px) {
+        .app-layout {
+          display: flex !important;
+          flex-direction: column;
+          height: 100vh; height: 100dvh;
+        }
+        .side-nav { display: none !important; }
+
+        .workspace {
+          padding-bottom: 90px; /* Μεγαλύτερο κενό για το Bottom Nav */
+        }
+
+        /* Mobile Header */
+        .workspace-header {
+          padding: 1rem; flex-direction: column; align-items: flex-start !important; gap: 1rem;
+        }
+        .header-tools {
+          width: 100%; overflow-x: auto; white-space: nowrap; padding-bottom: 0.5rem; justify-content: flex-start;
+        }
+
+        /* Bottom Tab Bar */
+        .mobile-bottom-nav {
+          display: flex; position: fixed; bottom: 0; left: 0; right: 0; height: 70px;
+          background: var(--surface-1); border-top: 1px solid var(--line);
+          z-index: 1050; justify-content: space-around; align-items: center;
+          padding-bottom: env(safe-area-inset-bottom);
+        }
+        .mobile-tab {
+          display: flex; flex-direction: column; align-items: center; justify-content: center;
+          color: var(--text-dim); text-decoration: none; font-size: 0.65rem; gap: 4px; width: 20%;
+        }
+        .mobile-tab i { font-size: 1.4rem; }
+        .mobile-tab.active { color: var(--primary); }
+
+        /* Floating Action Button (Το κίτρινο Calendar στη μέση) */
+        .mobile-fab-container { transform: translateY(-20px); }
+        .mobile-fab {
+          width: 55px; height: 55px; background: var(--warning); color: #000;
+          border-radius: 50%; display: flex; justify-content: center; align-items: center;
+          font-size: 1.5rem; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); border: 4px solid var(--surface-1);
+        }
+
+        /* Tables to Cards (Τα "Κουτιά") */
+        .table-shell table, .table-shell tbody, .table-shell tr, .table-shell td { display: block; width: 100%; }
+        .table-shell thead { display: none; }
+        .table-shell tr {
+          background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px;
+          margin-bottom: 1rem; padding: 1rem; position: relative;
+        }
+        .table-shell td {
+          display: flex; justify-content: space-between; align-items: center;
+          padding: 0.5rem 0 !important; border: none !important; text-align: right;
+        }
+        .table-shell td::before {
+          content: attr(data-label); color: var(--text-dim); font-size: 0.75rem;
+          font-weight: 600; margin-right: 1rem; text-transform: uppercase;
+        }
+        .table-shell td .form-check-input { margin: 0; }
+
+        /* Fullscreen Mobile Modals (Τα παράθυρα γεμίζουν την οθόνη στο κινητό) */
+        .modal-dialog:not(.modal-fullscreen) { margin: 0; height: 100dvh; max-width: 100vw; }
+        .modal-dialog:not(.modal-fullscreen) .modal-content { height: 100%; border-radius: 0; overflow-y: auto; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-layout sidebar-collapsed">
+      <aside class="side-nav">
+        <div class="brand-block">
+          <div class="d-flex align-items-center gap-3">
+            <div class="brand-mark">IO</div>
+            <div class="brand-text">
+              <p class="brand-caption mb-0">operations</p>
+              <h1 class="brand-title mb-0">Industry Control</h1>
+            </div>
+          </div>
+          <button class="btn btn-link text-light p-0 text-decoration-none" data-action="toggle-sidebar" title="Toggle Sidebar">
+            <i class="bi bi-list fs-2"></i>
+          </button>
+        </div>
+
+        <div class="nav-groups">
+          <div class="nav-section">
+            <p class="nav-section-title">Main</p>
+            <a href="#overview" class="nav-btn active">
+              <i class="bi bi-speedometer2"></i>
+              <span>Overview</span>
+            </a>
+            <a href="#status-board" class="nav-btn">
+              <i class="bi bi-kanban"></i>
+              <span>Crew Status Board</span>
+            </a>
+            <div>
+              <a href="#projects" class="nav-btn">
+                <i class="bi bi-diagram-3"></i>
+                <span>Projects</span>
+              </a>
+              <div id="sidebar-projects-list" class="sidebar-sub-list mt-1"></div>
+            </div>
+          </div>
+
+          <div class="nav-section">
+            <p class="nav-section-title mt-2">Operations</p>
+            <div class="nav-item-wrapper d-flex align-items-center position-relative">
+              <a href="#crew" class="nav-btn w-100" data-action="filter-crew" data-category="ALL">
+                <i class="bi bi-people"></i>
+                <span>Crew</span>
+              </a>
+              <button class="btn btn-link p-0 position-absolute end-0 me-2 nav-add-btn" data-action="open-role-category-create" title="Add Crew Category">
+                <i class="bi bi-plus-lg"></i>
+              </button>
+            </div>
+              <div id="sidebar-crew-list" class="sidebar-sub-list mt-1"></div>
+            <div class="nav-item-wrapper d-flex align-items-center position-relative">
+              <a href="#warehouse" class="nav-btn w-100" data-action="filter-inventory" data-category="ALL">
+                <i class="bi bi-box-seam"></i>
+                <span>Warehouse</span>
+              </a>
+              <button class="btn btn-link p-0 position-absolute end-0 me-2 nav-add-btn" data-action="open-inventory-category-create" title="Add Warehouse Category">
+                <i class="bi bi-plus-lg"></i>
+              </button>
+            </div>
+              <div id="sidebar-inventory-list" class="sidebar-sub-list mt-1 mb-2"></div>
+          </div>
+        </div>
+
+        <div class="side-footer">
+          <span class="badge text-bg-dark" id="admin-badge">VIEWER</span>
+          <small id="clock-label">--:--</small>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="workspace-header">
+          <div class="d-flex align-items-center gap-3">
+            <div>
+              <p class="view-kicker mb-1">Command center</p>
+              <h2 class="view-title mb-0" id="current-view-title">Overview</h2>
+            </div>
+          </div>
+
+          <div class="header-tools">
+            <button class="btn btn-sm btn-warning fw-bold text-dark me-3" data-action="open-master-calendar">
+              <i class="bi bi-calendar2-range me-1"></i> Master Calendar
+            </button>
+
+            <button class="btn btn-sm btn-primary" data-action="open-event-create">
+              <i class="bi bi-plus-lg"></i>
+              New event
+            </button>
+
+            <select id="user-role" class="form-select form-select-sm role-select">
+              <option value="VIEWER">Viewer</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+          </div>
+        </header>
+
+        <div id="global-alert" class="alert d-none" role="alert"></div>
+
+        <div class="view-stack">
+          <section class="view-pane active" id="view-overview">
+            <div class="stats-grid mb-4" id="overview-stats"></div>
+            <div class="row g-3">
+              <div class="col-md-8">
+                <div class="panel-card h-100">
+                  <div class="panel-head"><h3 class="panel-title">Upcoming Projects</h3></div>
+                  <div class="table-shell">
+                    <table class="table table-dark table-hover align-middle" id="overview-projects-table">
+                      <thead><tr><th>Project</th><th>Time Window</th><th>Status</th><th>Crew</th></tr></thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="panel-card h-100">
+                  <div class="panel-head"><h3 class="panel-title">Crew Workload</h3></div>
+                  <div id="overview-workload" class="vstack gap-3 mt-2"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="view-pane" id="view-status-board">
+            <div class="panel-card h-100 d-flex flex-column">
+              <div class="panel-head flex-shrink-0 d-flex justify-content-between align-items-center">
+                <h3 class="panel-title">Crew Status Board</h3>
+                <select id="status-board-filter" class="form-select form-select-sm" style="width: 150px;">
+                  <option value="ALL">All Projects</option>
+                  <option value="PLANNED">Planned</option>
+                  <option value="CONFIRMED">Confirmed</option>
+                  <option value="IN_PROGRESS">In Progress</option>
+                </select>
+              </div>
+              <div id="status-board" class="flex-grow-1 overflow-auto mt-3"></div>
+            </div>
+          </section>
+
+    <!-- Master Calendar Modal -->
+    <div class="modal fade" id="master-calendar-modal" tabindex="-1">
+      <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content modal-dark">
+          <div class="modal-header border-secondary py-3">
+            <h5 class="modal-title"><i class="bi bi-calendar2-range me-2 text-warning"></i>Master Coordination Calendar</h5>
+            <div class="d-flex align-items-center gap-3 ms-auto me-4">
+              <label class="form-label mb-0 text-light small">Filter View:</label>
+              <select id="master-calendar-filter" class="form-select form-select-sm" style="width: 220px;">
+                <option value="ALL">Everything Combined</option>
+                <option value="PROJECTS">Projects Only</option>
+                <option value="CREW">Crew Assignments Only</option>
+                <option value="INVENTORY">Equipment Only</option>
+              </select>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-3 d-flex flex-column">
+            <div id="calendar" class="flex-grow-1 w-100"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+          <section class="view-pane" id="view-projects">
+            <div class="panel-card h-100">
+              <div class="panel-head">
+                <h3 class="panel-title">Project Register</h3>
+                <div class="d-flex gap-2 align-items-center">
+                  <button class="btn btn-sm btn-outline-danger d-none" id="bulk-delete-projects-btn" data-action="bulk-delete-projects">Delete Selected</button>
+                  <input type="search" id="project-search" class="form-control form-control-sm" placeholder="Search projects..." style="width: 250px;">
+                </div>
+              </div>
+              <div class="table-shell" style="max-height: 70vh;">
+                <table class="table table-dark table-hover align-middle" id="projects-table">
+                  <thead><tr><th style="width: 40px;"><input class="form-check-input" type="checkbox" id="select-all-projects"></th><th>Title</th><th>Location</th><th>Time Window</th><th>Status</th><th>Assigned</th><th>Actions</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section class="view-pane" id="view-crew">
+        <div class="d-flex flex-column h-100">
+          <ul class="nav nav-pills mb-3 flex-shrink-0" role="tablist">
+            <li class="nav-item"><button class="nav-link active px-4" data-bs-toggle="tab" data-bs-target="#tab-crew-members" type="button"><i class="bi bi-people me-2"></i>Personnel</button></li>
+            <li class="nav-item"><button class="nav-link px-4" data-bs-toggle="tab" data-bs-target="#tab-crew-roles" type="button"><i class="bi bi-shield-lock me-2"></i>Roles & Skills</button></li>
+            <li class="nav-item"><button class="nav-link px-4" data-bs-toggle="tab" data-bs-target="#tab-crew-categories" type="button"><i class="bi bi-folder2 me-2"></i>Departments</button></li>
+          </ul>
+          <div class="tab-content flex-grow-1" style="min-height: 0;">
+            <div class="tab-pane fade show active h-100" id="tab-crew-members">
+              <div class="row g-3 h-100">
+                <div class="col-md-3">
+                  <div class="panel-card h-100 d-flex flex-column">
+                    <div class="panel-head flex-shrink-0"><h3 class="panel-title">Groups</h3></div>
+                    <div id="crew-groups" class="vstack gap-2 flex-grow-1 overflow-auto"></div>
+                  </div>
+                </div>
+                <div class="col-md-9">
+                  <div class="panel-card h-100 d-flex flex-column">
+                    <div class="panel-head flex-shrink-0">
+                      <h3 class="panel-title">Employee Ledger</h3>
+                      <div class="d-flex gap-2 align-items-center">
+                        <button class="btn btn-sm btn-outline-danger d-none" id="bulk-delete-crew-btn" data-action="bulk-delete-crew">Delete Selected</button>
+                        <button class="btn btn-sm btn-primary" data-action="open-employee-create">Add employee</button>
+                      </div>
+                    </div>
+                    <div class="table-shell flex-grow-1 overflow-auto">
+                      <table class="table table-dark table-hover align-middle" id="crew-table">
+                        <thead><tr><th style="width: 40px;"><input class="form-check-input" type="checkbox" id="select-all-crew"></th><th>Name</th><th>Contact</th><th>Roles</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="tab-pane fade h-100" id="tab-crew-roles">
+              <div class="panel-card h-100 d-flex flex-column">
+                <div class="panel-head flex-shrink-0">
+                  <h3 class="panel-title">System Roles</h3>
+                  <div class="d-flex gap-2 align-items-center">
+                    <button class="btn btn-sm btn-outline-danger d-none" id="bulk-delete-roles-btn" data-action="bulk-delete-roles">Delete Selected</button>
+                    <button class="btn btn-sm btn-primary" data-action="open-role-create">Add role</button>
+                  </div>
+                </div>
+                <div class="table-shell flex-grow-1 overflow-auto">
+                  <table class="table table-dark table-hover align-middle" id="roles-table">
+                        <thead><tr><th style="width: 40px;"><input class="form-check-input" type="checkbox" id="select-all-roles"></th><th>Code</th><th>Display Name</th><th>Category</th><th>Type</th><th>Actions</th></tr></thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="tab-pane fade h-100" id="tab-crew-categories">
+              <div class="panel-card h-100 d-flex flex-column">
+                <div class="panel-head flex-shrink-0">
+                  <h3 class="panel-title">Role Categories (Departments)</h3>
+                  <div class="d-flex gap-2 align-items-center">
+                    <button class="btn btn-sm btn-outline-danger d-none" id="bulk-delete-role-categories-btn" data-action="bulk-delete-role-categories">Delete Selected</button>
+                    <button class="btn btn-sm btn-primary" data-action="open-role-category-create">Add Category</button>
+                  </div>
+                </div>
+                <div class="table-shell flex-grow-1 overflow-auto">
+                  <table class="table table-dark table-hover align-middle" id="role-categories-table">
+                        <thead>
+                          <tr><th style="width: 40px;"><input class="form-check-input" type="checkbox" id="select-all-role-categories"></th><th>Category Name</th><th>Roles</th><th>Actions</th></tr>
+                        </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+          </section>
+
+      <section class="view-pane" id="view-warehouse">
+        <div class="d-flex flex-column h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3 flex-shrink-0 flex-wrap gap-3">
+            <ul class="nav nav-pills" role="tablist">
+              <li class="nav-item"><button class="nav-link active px-4" data-bs-toggle="tab" data-bs-target="#tab-warehouse-items" type="button"><i class="bi bi-box-seam me-2"></i>Inventory Items</button></li>
+              <li class="nav-item"><button class="nav-link px-4" data-bs-toggle="tab" data-bs-target="#tab-warehouse-categories" type="button"><i class="bi bi-folder2 me-2"></i>Categories</button></li>
+            </ul>
+            <div class="d-flex align-items-center gap-2">
+              <label class="text-secondary small fw-bold text-uppercase mb-0 text-nowrap">Active Facility:</label>
+              <select id="warehouse-select-filter" class="form-select form-select-sm bg-dark border-secondary text-white" style="width: 180px;">
+                <option value="ALL">All Warehouses</option>
+              </select>
+            </div>
+          </div>
+          <div class="tab-content flex-grow-1" style="min-height: 0;">
+            <div class="tab-pane fade show active h-100" id="tab-warehouse-items">
+              <div class="row g-3 h-100">
+                <div class="col-md-3">
+                  <div class="panel-card h-100 d-flex flex-column">
+                    <div class="panel-head flex-shrink-0"><h3 class="panel-title">Categories</h3></div>
+                    <div id="inventory-groups" class="vstack gap-2 flex-grow-1 overflow-auto"></div>
+                  </div>
+                </div>
+                <div class="col-md-9">
+                  <div class="panel-card h-100 d-flex flex-column">
+                    <div class="panel-head flex-shrink-0">
+                      <h3 class="panel-title">Inventory Register</h3>
+                      <div class="d-flex gap-2 align-items-center">
+                        <button class="btn btn-sm btn-outline-danger d-none" id="bulk-delete-inventory-btn" data-action="bulk-delete-inventory">Delete Selected</button>
+                        <button class="btn btn-sm btn-primary" data-action="open-inventory-create">Add item</button>
+                      </div>
+                    </div>
+                    <div class="table-shell flex-grow-1 overflow-auto">
+                      <table class="table table-dark table-hover align-middle" id="inventory-table">
+                        <thead><tr><th style="width: 40px;"><input class="form-check-input" type="checkbox" id="select-all-inventory"></th><th>SKU</th><th>Name</th><th>Category</th><th>Availability</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="tab-pane fade h-100" id="tab-warehouse-categories">
+              <div class="panel-card h-100 d-flex flex-column">
+                <div class="panel-head flex-shrink-0">
+                  <h3 class="panel-title">Warehouse Categories</h3>
+                  <div class="d-flex gap-2 align-items-center">
+                    <button class="btn btn-sm btn-outline-danger d-none" id="bulk-delete-inventory-categories-btn" data-action="bulk-delete-inventory-categories">Delete Selected</button>
+                    <button class="btn btn-sm btn-primary" data-action="open-inventory-category-create">Add Category</button>
+                  </div>
+                </div>
+                <div class="table-shell flex-grow-1 overflow-auto">
+                  <table class="table table-dark table-hover align-middle" id="inventory-categories-table">
+                    <thead>
+                      <tr><th style="width: 40px;"><input class="form-check-input" type="checkbox" id="select-all-inventory-categories"></th><th>Category Name</th><th>Items</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+          <section class="view-pane" id="view-project-editor">
+            <form id="event-form">
+              <div class="panel-card">
+                <div class="panel-head mb-4">
+                  <h3 class="panel-title" id="event-modal-title">Project Editor</h3>
+                  <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-action="close-editor">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-primary">Save Project</button>
+                  </div>
+                </div>
+
+                <input type="hidden" id="event-id">
+
+                <ul class="nav nav-tabs mb-4" role="tablist">
+                  <li class="nav-item"><button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#tab-general" type="button">General</button></li>
+                  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-crew" type="button">Crew</button></li>
+                  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-equipment" type="button">Equipment</button></li>
+                </ul>
+
+                <div class="tab-content">
+                  <div class="tab-pane fade show active" id="tab-general">
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <label class="form-label">Project Title</label>
+                        <input id="event-title" class="form-control" required>
+                      </div>
+                      <div class="col-md-3">
+                        <label class="form-label">Operation Type</label>
+                        <select id="event-type" class="form-select">
+                          <option value="EXTERNAL">External Job</option>
+                          <option value="INTERNAL">Internal Work</option>
+                        </select>
+                      </div>
+                      <div class="col-md-3">
+                        <label class="form-label">Status</label>
+                        <select id="event-status" class="form-select">
+                          <option value="PLANNED">PLANNED</option>
+                          <option value="CONFIRMED">CONFIRMED</option>
+                          <option value="IN_PROGRESS">IN_PROGRESS</option>
+                          <option value="COMPLETED">COMPLETED</option>
+                          <option value="CANCELED">CANCELED</option>
+                        </select>
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Start Schedule</label>
+                        <input type="datetime-local" id="event-start" class="form-control" required>
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">End Schedule</label>
+                        <input type="datetime-local" id="event-end" class="form-control" required>
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Color Indicator</label>
+                        <input type="color" id="event-color" class="form-control form-control-color w-100">
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Location / Venue</label>
+                        <div class="input-group">
+                          <span class="input-group-text bg-dark border-secondary text-light"><i class="bi bi-geo-alt"></i></span>
+                          <input id="event-location" class="form-control" placeholder="e.g. OAKA Stadium, Athens">
+                          <button class="btn btn-outline-info" type="button" data-action="open-map-location" title="Find on Map"><i class="bi bi-map"></i> Map</button>
+                        </div>
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Internal Notes</label>
+                        <textarea id="event-description" class="form-control" rows="3"></textarea>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="tab-pane fade" id="tab-crew">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <label class="form-label mb-0 text-accent">Crew Assignments</label>
+                      <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-light" data-action="assignment-add">Add Row</button>
+                        <button type="button" class="btn btn-sm btn-outline-light" data-action="assignment-autocrew">Auto Crew</button>
+                        <button type="button" class="btn btn-sm btn-outline-light" data-action="assignment-autohours">Auto Hours</button>
+                      </div>
+                    </div>
+                    <div id="assignment-list" class="assignment-shell d-flex flex-column gap-2"></div>
+                  </div>
+
+                  <div class="tab-pane fade" id="tab-equipment">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <label class="form-label mb-0 text-accent">Equipment Register</label>
+                      <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-light" data-action="equipment-add">Add Gear</button>
+                        <button type="button" class="btn btn-sm btn-outline-light" data-action="equipment-suggest">Suggest Gear</button>
+                      </div>
+                    </div>
+                    <div id="equipment-list" class="assignment-shell d-flex flex-column gap-2"></div>
+                  </div>
+                </div>
+
+                <div id="event-delete-modal" class="mt-4 pt-3 border-top border-secondary d-none">
+                  <button type="button" class="btn btn-sm btn-outline-danger" data-action="delete-event-current">Delete Project</button>
+                </div>
+              </div>
+            </form>
+          </section>
+        </div>
+      </main>
+
+      <!-- MOBILE BOTTOM TAB BAR -->
+      <nav class="mobile-bottom-nav">
+        <a href="#overview" class="mobile-tab nav-btn active">
+          <i class="bi bi-speedometer2"></i>
+          <span>Home</span>
+        </a>
+        <a href="#projects" class="mobile-tab nav-btn">
+          <i class="bi bi-diagram-3"></i>
+          <span>Projects</span>
+        </a>
+        <div class="mobile-tab mobile-fab-container" style="cursor:pointer;" data-action="open-master-calendar">
+          <div class="mobile-fab"><i class="bi bi-calendar2-range"></i></div>
+        </div>
+        <a href="#crew" class="mobile-tab nav-btn">
+          <i class="bi bi-people"></i>
+          <span>Crew</span>
+        </a>
+        <a href="#warehouse" class="mobile-tab nav-btn">
+          <i class="bi bi-box-seam"></i>
+          <span>Gear</span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- MODALS -->
+
+    <!-- Employee Modal -->
+    <div class="modal fade" id="employee-modal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content modal-dark" id="employee-form">
+          <div class="modal-header border-secondary">
+            <h5 class="modal-title" id="employee-modal-title">Employee</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="employee-id">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">First Name</label>
+                <input id="employee-first" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Last Name</label>
+                <input id="employee-last" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Email</label>
+                <input type="email" id="employee-email" class="form-control">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Phone</label>
+                <input id="employee-phone" class="form-control">
+              </div>
+              <div class="col-12">
+                <div class="form-check form-switch mt-2">
+                  <input class="form-check-input" type="checkbox" id="employee-active" checked>
+                  <label class="form-check-label">Active Account</label>
+                </div>
+              </div>
+              <div class="col-12 border-top border-secondary pt-3 mt-4">
+                <label class="form-label">Assigned Roles</label>
+                <select id="employee-roles" class="d-none" multiple></select>
+                <div class="d-flex gap-2 mb-2">
+                  <select id="employee-role-picker" class="form-select form-select-sm"></select>
+                  <button type="button" class="btn btn-sm btn-secondary" data-action="employee-role-add">Add</button>
+                </div>
+                <div id="employee-role-chips" class="d-flex flex-wrap gap-1"></div>
+              </div>
+            </div>
+            <div id="employee-delete-modal" class="mt-4 pt-3 border-top border-secondary d-none">
+              <button type="button" class="btn btn-sm btn-outline-danger" data-action="delete-employee-current">Delete Employee</button>
+            </div>
+          </div>
+          <div class="modal-footer border-secondary">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Role Modal -->
+    <div class="modal fade" id="role-modal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content modal-dark" id="role-form">
+          <div class="modal-header border-secondary">
+            <h5 class="modal-title" id="role-modal-title">Role</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="role-id">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Role Code (Unique)</label>
+                <input id="role-code" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Display Name</label>
+                <input id="role-name" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Category</label>
+                <select id="role-category" class="form-select"></select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Color Indicator</label>
+                <input type="color" id="role-color" class="form-control form-control-color w-100">
+              </div>
+              <div class="col-12 mt-3">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="role-system">
+                  <label class="form-check-label">System Role (Protected)</label>
+                </div>
+              </div>
+            </div>
+            <div id="role-delete-modal" class="mt-4 pt-3 border-top border-secondary d-none">
+              <button type="button" class="btn btn-sm btn-outline-danger" data-action="delete-role-current">Delete Role</button>
+            </div>
+          </div>
+          <div class="modal-footer border-secondary">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Role</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Role Category Modal -->
+    <div class="modal fade" id="role-category-modal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <form class="modal-content modal-dark" id="role-category-form">
+          <div class="modal-header border-secondary">
+            <h5 class="modal-title" id="role-category-modal-title">Category</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="role-category-id">
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label">Category Name</label>
+                <input id="role-category-name" class="form-control" required>
+              </div>
+            </div>
+            <div id="role-category-delete-modal" class="mt-4 pt-3 border-top border-secondary d-none">
+              <button type="button" class="btn btn-sm btn-outline-danger" data-action="delete-role-category-current">Delete Category</button>
+            </div>
+          </div>
+          <div class="modal-footer border-secondary">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Category</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Inventory Modal -->
+    <div class="modal fade" id="inventory-modal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content modal-dark" id="inventory-form">
+          <div class="modal-header border-secondary">
+            <h5 class="modal-title" id="inventory-modal-title">Inventory Item</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="inventory-id">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">SKU</label>
+                <input id="inventory-sku" class="form-control" required>
+              </div>
+              <div class="col-md-8">
+                <label class="form-label">Item Name</label>
+                <input id="inventory-name" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Category</label>
+                <select id="inventory-category" class="form-select"></select>
+              </div>
+              <div class="col-md-6">
+                  <label class="form-label">Facility / Warehouse</label>
+                  <select id="inventory-warehouse" class="form-select" required></select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Total Stock</label>
+                <input type="number" id="inventory-total" class="form-control" min="0" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Reserved</label>
+                <input type="number" id="inventory-reserved" class="form-control" min="0" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Status</label>
+                <select id="inventory-status" class="form-select" required>
+                  <option value="AVAILABLE">AVAILABLE</option>
+                  <option value="RESERVED">RESERVED</option>
+                  <option value="MAINTENANCE">MAINTENANCE</option>
+                  <option value="LOST">LOST</option>
+                </select>
+              </div>
+            </div>
+            <div id="inventory-delete-modal" class="mt-4 pt-3 border-top border-secondary d-none">
+              <button type="button" class="btn btn-sm btn-outline-danger" data-action="delete-inventory-current">Delete Item</button>
+            </div>
+          </div>
+          <div class="modal-footer border-secondary">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Item</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Inventory Category Modal -->
+    <div class="modal fade" id="inventory-category-modal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <form class="modal-content modal-dark" id="inventory-category-form">
+          <div class="modal-header border-secondary">
+            <h5 class="modal-title" id="inventory-category-modal-title">Category</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="inventory-category-id">
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label">Category Name</label>
+                <input id="inventory-category-name" class="form-control" required>
+              </div>
+            </div>
+            <div id="inventory-category-delete-modal" class="mt-4 pt-3 border-top border-secondary d-none">
+              <button type="button" class="btn btn-sm btn-outline-danger" data-action="delete-inventory-category-current">Delete Category</button>
+            </div>
+          </div>
+          <div class="modal-footer border-secondary">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Category</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+
+    <!-- Confirm Delete Modal -->
+    <div class="modal fade" id="confirm-modal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content modal-dark">
+          <div class="modal-body text-center p-4">
+            <i class="bi bi-exclamation-triangle text-danger display-4 mb-3 d-block"></i>
+            <p id="confirm-message" class="mb-4">Are you sure?</p>
+            <div class="d-flex justify-content-center gap-2">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-danger" id="confirm-accept">Yes, delete it</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js"></script>
+    <script type="module" src="./js/app.js"></script>
+    <script type="module" src="./js/utils.js"></script>
+  </body>
+</html>

@@ -1,0 +1,88 @@
+#calendar {
+  border: 1px solid var(--line);
+  border-radius: var(--border-radius);
+  padding: 0.1rem;
+  background: var(--bg-main);
+}
+
+.schedule-toolbar {
+  border: 1px solid var(--line);
+  border-radius: var(--border-radius);
+  background: var(--bg-main);
+  padding: 0.45rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.schedule-range-label {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.fc .fc-button {
+  background: var(--bg-main);
+  border: 1px solid var(--line);
+}
+
+.schedule-toolbar .btn.active,
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active,
+.fc .fc-button-primary:not(:disabled):hover {
+  background: var(--accent) !important;
+  color: #f8fbff;
+  border-color: transparent;
+}
+
+.fc .fc-toolbar {
+  display: none;
+}
+
+.fc .fc-timegrid-slot-label-cushion,
+.fc .fc-col-header-cell-cushion,
+.fc .fc-daygrid-day-number {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.fc .fc-timegrid-axis-cushion,
+.fc .fc-list-day-cushion {
+  color: var(--text-dim);
+}
+
+.fc .fc-timegrid-now-indicator-line {
+  border-color: var(--accent);
+}
+
+.fc .fc-timegrid-now-indicator-arrow {
+  border-left-color: var(--accent);
+  border-right-color: var(--accent);
+}
+
+.fc .fc-event {
+  border-radius: 2px;
+  padding: 1px 3px;
+  font-size: 0.72rem;
+  border-width: 1px;
+}
+
+.fc-theme-standard td,
+.fc-theme-standard th,
+.fc-theme-standard .fc-scrollgrid {
+  border-color: var(--line-soft);
+}
+
+.fc .fc-scrollgrid,
+.fc .fc-timegrid-col,
+.fc .fc-timegrid-slot,
+.fc .fc-col-header-cell,
+.fc .fc-daygrid-day,
+.fc .fc-daygrid-day-frame {
+  background: var(--bg-main);
+}
+
+.fc .fc-timegrid-axis,
+.fc .fc-timegrid-slot-label {
+  background: #0d1014;
+}

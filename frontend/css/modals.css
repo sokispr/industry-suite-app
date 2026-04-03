@@ -1,0 +1,90 @@
+.assignment-shell {
+  background: var(--bg-main);
+  border: 1px solid var(--line);
+  border-radius: var(--border-radius);
+  padding: 0.6rem;
+}
+
+.role-edit-shell {
+  background: var(--bg-main);
+  border: 1px solid var(--line);
+  border-radius: var(--border-radius);
+  padding: 0.6rem;
+}
+
+.assignment-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr auto;
+  gap: 0.4rem;
+}
+
+.equipment-row {
+  display: grid;
+  grid-template-columns: 1.4fr 0.6fr 1fr auto;
+  gap: 0.4rem;
+}
+
+/* Rentman style tabs */
+.nav-tabs {
+  border-bottom: 1px solid var(--line);
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
+}
+
+.nav-tabs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.nav-tabs::-webkit-scrollbar-thumb {
+  background-color: var(--line);
+  border-radius: 4px;
+}
+
+.nav-tabs .nav-link {
+  color: var(--text-dim);
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.6rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.nav-tabs .nav-link:hover {
+  border-color: transparent;
+  color: var(--text-main);
+}
+
+.nav-tabs .nav-link.active {
+  background: transparent;
+  color: var(--accent);
+  border-bottom: 2px solid var(--accent);
+}
+
+.nav-pills .nav-link {
+  color: var(--text-dim);
+}
+
+.nav-pills .nav-link.active {
+  background-color: var(--accent);
+  color: var(--accent-fg);
+}
+
+.modal-dark {
+  background: var(--bg-panel);
+  color: var(--text-main);
+  border: 1px solid var(--line);
+}
+
+.form-control,
+.form-select,
+.form-control-color {
+  background: var(--bg-main);
+  color: var(--text-main);
+  border: 1px solid var(--line);
+}

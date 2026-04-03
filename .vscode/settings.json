@@ -1,0 +1,28 @@
+{
+    "files.exclude": {
+        "**/target": true,
+        "**/.mvn": true,
+        "**/.idea": true,
+        "**/*.log": true,
+        "**/maven-archiver": true
+    },
+    "java.compile.nullAnalysis.mode": "automatic",
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 3307,
+            "driver": "MySQL",
+            "name": "LocalHost",
+            "group": "Dev",
+            "database": "industry_planner",
+            "username": "app_user",
+            "askForPassword": true
+        }
+    ]
+}
